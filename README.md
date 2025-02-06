@@ -20,10 +20,6 @@ New design for universal automation. Improves upon the design in the EV+ branch.
    - ME Storage Cell
 ## Optional Components for Fluid Handling
 - Advanced Stocking Input Hatch (ME) and ME Fluid Storage Cell, or any Input Hatch
-## Code
-```lua
-local a,b=component,computer;local c=a.proxy(a.list("transposer")())local d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t=ipairs,b.uptime,b.pullSignal,c.getInventoryName,c.getAllStacks,c.getFluidInTank,c.transferItem;for u=0,5 do t=g(u)k,l,m,n=k or t=="gt.blockmachines"and#i(u)>0 and u,l or t=="tile.extrautils:chestFull"and u,m or t=="tile.appliedenergistics2.BlockDrive"and u,n or not t and pcall(j,u,u,0,1,1)and u end;while""do o=h(l)if o[1]then while""do p=h(m)if p[1].storedItemTypes==0 then r=_;if p[2]and#p[2].tag>48 then r=1 elseif k then q=i(k)for v=1,#q do if q[v].amount>0 then r=1;break end end end;if not r then for v,_ in d(o)do while j(l,n,1,v,(v+n-1)%9+1)==0 do end end;break end end;s=e()+0.4;while e()<s do f(0)end end end;s=e()+0.35;while e()<s do f(0)end end
-```
 ## Installation Steps
 1. Flash the universal program to an EEPROM using a computer running OpenOS.
    - Note: only the first EEPROM needs flashing; the rest can be copied (see NEI).
@@ -46,6 +42,8 @@ Pattern as usual, but include the non-consumed item in the inputs. Ensure the no
 - You can recycle non-consumed items by adding them to both the input and output of patterns.
    - To allow AE2 to use multiple machines for processing, continuously export these non-consumed items back into the system.
 - The storage bus filter can be copy-pasted using a data stick for easier setup.
+- The ME Interface can be shared in a wallshared setup since it does *not* have to face into the Microcontroller.
+  - Make sure to use cable anchors to keep the main and subnet disconnected.
 ## Pitfalls
 - AE2 Channels Pass Through the Microcontroller
    - Ensure it does not interfere with other network components.
