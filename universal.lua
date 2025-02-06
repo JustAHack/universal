@@ -16,7 +16,7 @@ for side = 0, 5 do
     if n == "gt.blockmachines" and getTankCount(side) > 0 then hatch = side
     elseif n == "tile.extrautils:chestFull" then nc = side
     elseif n == "tile.appliedenergistics2.BlockDrive" then drive = side
-    elseif not s then
+    elseif not n then
         -- This call must succeed. Only a tile entity that can actually receive items passes this.
         if pcall(transferItem, side, side, 0, 1, 1) then
             interface = side
@@ -39,7 +39,7 @@ while true do
                     -- This check is very cursed, just trust that longer NBT data means fluid is present.
                     -- No longer required on versions >= 2.7.3.
                     if #disks[2].tag > 48 then fluid = true end
-				-- Otherwise, check the fluid hatch next to the transposer, if present.
+                -- Otherwise, check the fluid hatch next to the transposer, if present.
                 elseif hatch then
                     tanks = getFluidInTank(hatch)
                     for i = 1, #tanks do
