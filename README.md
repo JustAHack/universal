@@ -1,100 +1,56 @@
-# Early Universal Automation for Multis
-
-A post by Julia (vlamonster) and AX3Lino.
-
-## Introduction
-
-This post outlines a method to integrate multi-block machines into your Applied Energistics system in a universal and
-scalable manner. By "universal," we mean that the machine can handle any recipe it is capable of processing. This
-includes recipes involving programmed circuits and other non-consumable items (referred to as NCs). Additionally, the
-setup is highly scalable and works seamlessly with (dual) P2P interfaces if more parallel processing is required.
-
-As far as we are ware, this setup has minimal overhead and is TPS-friendly, though it has not yet been extensively
-tested.
-
-Constructive feedback is welcome, but please keep it related to this post.
-
-## The Idea
-
-This section explains how the setup works, though it's not necessary to understand it to recreate it. Read this if you
-want to make changes or understand the process.
-
-To make our machines perform arbitrary recipes, we need to send non-consumables (NCs) along with the inputs. This poses
-two problems: teaching the system how to handle these recipes and moving the NC from the input bus, as it is not
-automatically moved to the output upon recipe completion.
-
-### Teaching the System
-
-The first problem has a straightforward solution with some caveats. We add the NC to *both* the input and output of
-patterns. This requires adding copies of the NC to your system. The number of NCs needed depends on the potential
-parallelism of your system. For instance, if an item requires both iron plates and steel plates using circuit 1 as NC,
-the system will need 2 copies of circuit 1 to start the craft. If your system has N bending machines, you should
-have `max(N, 2)` copies of circuit 1 to use all available parallelism.
-
-There are some nuances here that you may need to be aware of. AE2 considers different nodes in the crafting tree that
-refer to the same item to be parallelizable. For example the following crafting tree will require two copies of `NC`
-because it thinks it can *theoretically* parallelize here.
-
+New design for universal automation. Improves upon the design in the EV+ branch. Discussion at https://discord.com/channels/181078474394566657/1336361218205814977.
+## Features
+- Low (or minimal) switching time
+- Minimal impact on server performance
+- Compact design
+- Simple setup and relocation
+- Upgrades automatically with better hatches
+## Requirements
+- Advanced Stocking Input Bus (ME)
+- Slightly Larger Chest
+- Microcontroller with:
+   - Memory (Tier 1)
+   - Central Processing Unit (CPU) (Tier 1)
+   - Transposer
+   - EEPROM flashed with universal program
+- ME Components:
+   - ME Interface (part)
+   - ME Storage Bus
+   - ME Drive
+   - ME Storage Cell
+## Optional Components for Fluid Handling
+- Advanced Stocking Input Hatch (ME) and ME Fluid Storage Cell, or any Input Hatch
+## Code
+```lua
+local a,b=component,computer;local c=a.proxy(a.list("transposer")())local d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t=ipairs,b.uptime,b.pullSignal,c.getInventoryName,c.getAllStacks,c.getFluidInTank,c.transferItem;for u=0,5 do t=g(u)k,l,m,n=k or t=="gt.blockmachines"and#i(u)>0 and u,l or t=="tile.extrautils:chestFull"and u,m or t=="tile.appliedenergistics2.BlockDrive"and u,n or not t and pcall(j,u,u,0,1,1)and u end;while""do o=h(l)if o[1]then while""do p=h(m)if p[1].storedItemTypes==0 then r=_;if p[2]and#p[2].tag>48 then r=1 elseif k then q=i(k)for v=1,#q do if q[v].amount>0 then r=1;break end end end;if not r then for v,_ in d(o)do while j(l,n,1,v,(v+n-1)%9+1)==0 do end end;break end end;s=e()+0.4;while e()<s do f(0)end end end;s=e()+0.35;while e()<s do f(0)end end
 ```
-B + C -> D
-├── A + NC -> B
-└── B -> C
-    └── A + NC -> B
-```
-
-Lastly, AE2 will try to re-use outputs when it sees it can repeat any particular recipe. For this reason you will need a
-way to convince the system that it is constantly being returned relevant NCs for parallelized recipes. This can easily
-be achieved by putting an export bus on an interface with the relevant NCs.
-
-### Moving the Non-Consumables
-
-The second problem can be solved using an OpenComputers computer. Input buses have directional I/O, so we need a way to
-both pull and push to it. This is achieved using a Transvector Interface from Thaumic Tinkerer, binding it to the input
-bus to get another copy of the input face. The computer uses a Transposer to move the NCs around. By placing a
-Transposer adjacent to the Transvector Interface and an Interface block from AE2, we can return NCs to the system upon
-recipe completion.
-
-### Lua Script
-
-The following snippet from the Lua script checks when ***only*** the NC is left in the subnet and moves it accordingly.
-The Transposer should be adjacent to the input bus (and input hatch, if there is one) with the highest priority in the
-subnet. Additionally, the input bus must sort its items so that the NC eventually appears in the first slot.
-
-```Lua
-    for _, transposer in pairs(transposers) do
-      local item = transposer.getStackInSlot(transposer.inputBusSide, 1)
-      if item and nonConsumables[item.label] then
-        if not transposer.inputHatchSide or transposer.getFluidInTank(transposer.inputHatchSide, 1).amount == 0 then
-          transposer.transferItem(transposer.inputBusSide, transposer.interfaceSide, 1, 1, 1)
-        end
-      end
-    end
-```
-
-## The Setup
-
-### Needed Items
-
-- Computer/Server (depending on number of components)
-- Transposer
-- p2p tunnels
-- ME Interface (Block)
-- Transvector Interface
-- *Optional: Advanced Blocking Card if using subnets*
-
-### Steps
-
-1. Put transposer adjacent to
-    * ME Interface (Block)
-    * Transvector Interface (linked to input bus with the highest priority, matching the input facing)
-    * *Optional: Input hatch with the highest priority*
-2. Connect Computer/Server to transposers using OpenComputer p2p tunnels.
-3. *Optional: set Advanced Blocking Card to strict mode on subnet side and (p2p) interface looking into subnet with
-   blocking mode enabled.*
-4. Set your home directory up like in https://github.com/Vlamonster/universal and run `universal` when your system has
-   booted.
-
-### Pitfalls
-
-Watch out for accidentally putting other GT:NH blocks next to the Transposer, as the computer may mess up. For example,
-a combustion generator could accidentally be seen as an input hatch!
+## Installation Steps
+1. Flash the universal program to an EEPROM using a computer running OpenOS.
+   - Note: only the first EEPROM needs flashing; the rest can be copied (see NEI).
+2. Assemble the Microcontroller in an Electronics Assembler.
+3. Position the Microcontroller between:
+   - ME Interface
+   - ME Drive
+   - Slightly Larger Chest
+   - (Optional) Input Hatch
+4. Insert the storage cells into the ME Drive:
+   - Slot 1: ME Storage Cell
+   - Slot 2: ME Fluid Storage Cell (if using fluid support)
+5. Connect the Slightly Larger Chest to the subnet via an ME Storage Bus set to priority 1, filtered to the relevant non-consumed items.
+6. Configure the Advanced Stocking Bus to automatically pull and recipe-check.
+   - Do the same for the Advanced Stocking Hatch .
+7. For fluid support, set the Input Hatch next to the Microcontroller to priority 1.
+## How to Use
+Pattern as usual, but include the non-consumed item in the inputs. Ensure the non-consumed items are filtered on the ME Storage Bus going into the Slightly Larger Chest.
+## Tips
+- You can recycle non-consumed items by adding them to both the input and output of patterns.
+   - To allow AE2 to use multiple machines for processing, continuously export these non-consumed items back into the system.
+- The storage bus filter can be copy-pasted using a data stick for easier setup.
+## Pitfalls
+- AE2 Channels Pass Through the Microcontroller
+   - Ensure it does not interfere with other network components.
+- Dynamic Interface Detection
+   - Only one ME Interface should be placed next to the Microcontroller.
+- Tank Detection Behavior
+   - The Microcontroller detects any neighboring `gt.blockmachines` with tanks as an Input Hatch.
+   - Only one Input Hatch should be placed next to it.
